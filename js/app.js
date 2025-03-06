@@ -15,19 +15,30 @@ window.onload = () => {
     selectCriptos.addEventListener('change', leerValor);
 }
 
-function consultarCriptos(){ //Consultamos las 10 mas importantes
+async function consultarCriptos(){ //Consultamos las 10 mas importantes
     const url = 'https://min-api.cryptocompare.com/data/top/mktcapfull?limit=10&tsym=USD';
 
-    fetch(url)
+    try{
+        const resultado = await fetch(url);
+        const datos = await resultado.json();
+        selectCriptomonedas(datos.Data)
+    } catch(error){
+        console.log(error);
+    }
+
+    //Otras formas de hacerlo
+    /*fetch(url)
         .then(respuesta => respuesta.json())
         .then(datos => selectCriptomonedas(datos.Data))
 }
-        /*Otra forma de hacerlo:
+        Otra forma de hacerlo:
         .then(datos => obtenerCriptomendas(datos.Data))
         .then(criptomonedas => selectCriptomonedas(criptomonedas)) //De esta forma nos traemos las criptomonedas y podemos realizarle mas operaciones
-}
+*/
+    }
 
-//Crear un Promise
+
+/*Crear un Promise
 const obtenerCriptomendas = criptomonedas => new Promise( resolve => {
     resolve(criptomonedas);
 })*/
@@ -46,6 +57,7 @@ function selectCriptomonedas(criptomonedas){
 
 function submitFormulario(e){
     e.preventDefault();
+    limpiarHTML();
     const {moneda, criptomoneda} = objBusqueda;
 
     if(criptomoneda === '' || moneda === ''){
@@ -56,11 +68,11 @@ function submitFormulario(e){
     //Si pasa validación, consultamos la API con los resultados
     consultarAPI();
     formulario.reset();
+    limpiarObj();
 }
 
 function leerValor(e){
     objBusqueda[e.target.name] = e.target.value; //Como tengo los name de los select igual a las propiedades del objeto los puedo asignar de esta forma
-    console.log(objBusqueda);
 }
 
 function imprimirAlerta(mensaje){
@@ -81,16 +93,23 @@ function imprimirAlerta(mensaje){
     }
 }
 
-function consultarAPI(){
+async function consultarAPI(){
     const {moneda, criptomoneda} = objBusqueda;
     const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${criptomoneda}&tsyms=${moneda}`;
 
     mostrarSpinner();
 
-    fetch(url)  
+    try{
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+        mostrarCotizacion(datos.DISPLAY[criptomoneda][moneda]);
+    } catch(error){
+        console.log(error);
+    }
+    /*fetch(url)  
         .then(respuesta => respuesta.json())
         //Para ingresar a las propiedades de los datos de esa cripto y esa moneda tenemos que ingresar: datos.DISPLAY[criptomoneda][moneda]
-        .then(datos => mostrarCotizacion(datos.DISPLAY[criptomoneda][moneda])) 
+        .then(datos => mostrarCotizacion(datos.DISPLAY[criptomoneda][moneda])) */
 
 }
 
@@ -140,4 +159,9 @@ function mostrarSpinner(){
     `
 
     resultado.appendChild(spinner);
+}
+
+function limpiarObj(){
+    objBusqueda.criptomoneda = '';
+    objBusqueda.moneda = '';
 }
